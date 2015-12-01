@@ -10,6 +10,7 @@ import javax.sound.sampled.SourceDataLine;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import sound.Sound;
+import wave.FileWave;
 import wave.SawtoothWave;
 import wave.SineWave;
 import wave.SquareWave;
@@ -84,6 +85,11 @@ public class PianoKey extends Rectangle
 			case "Triangle":
 			{
 				sound = new TriangleWave().getPeriod(frequency.getValue());
+				break;
+			}
+			case "File":
+			{
+				sound = new FileWave(SynthesizerApplication.fileWave).getPeriod(frequency.getValue());
 				break;
 			}
 			default:

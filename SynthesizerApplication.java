@@ -4,6 +4,7 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import sound.Sound;
 
@@ -33,6 +35,8 @@ public class SynthesizerApplication extends Application
 	Rectangle[] visualizerBars = new Rectangle[numVisualizerBars];
 	Sound playingSound = null;
 	double visualizerPhaseShift = 0;
+	
+	static File fileWave = null;
 	
 	Pane keyboard = new Pane();
 	PianoKey whiteKeys[] = new PianoKey[100];
@@ -104,11 +108,16 @@ public class SynthesizerApplication extends Application
 		//default waveform
 		
 		//Waveform Selector
-		ObservableList<String> waveforms = FXCollections.observableArrayList("Sine", "Square", "Triangle", "Sawtooth");
+		ObservableList<String> waveforms = FXCollections.observableArrayList("Sine", "Square", "Triangle", "Sawtooth", "File");
 		final ComboBox<String> waveformSelector = new ComboBox<String>(waveforms);
 		waveformSelector.setValue("Sine");
 		waveformSelector.valueProperty().addListener(listener -> {
 			waveform = waveformSelector.getValue().toString();
+			if(waveform.equals("File")) {
+				FileChooser openFileChooser = new FileChooser();
+				openFileChooser.setTitle("Open File");
+				fileWave = openFileChooser.showOpenDialog(primaryStage);
+			}
 		});
 		
 		//ADSR Sliders
