@@ -52,7 +52,7 @@ public class Audio {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		sound.setGain(-10);
+		System.out.println(sound.setGain(-10));
 		try {
 			Thread.sleep(2000);
 		} catch (InterruptedException e) {

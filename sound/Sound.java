@@ -45,6 +45,13 @@ public class Sound {
 	}
 	
 	public boolean setGain(float gain) {
+		
+		System.out.println(clip.getControls().length);
+		for(Control control: clip.getControls()) {
+			System.out.println(control.getType());
+		}
+		
+		
 		if(clip != null && clip.isActive() && clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
 			FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
 			gainControl.setValue(gain);
