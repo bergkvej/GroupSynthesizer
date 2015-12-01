@@ -48,9 +48,7 @@ public class Audio {
 		clip.loop(Clip.LOOP_CONTINUOUSLY);
 		gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
 		gainControl.setValue(gain);
-		currentGain = gain;
-		shiftGain(1.0);
-		
+		currentGain = gain;		
 		return clip;
 	}
 	public static void shiftGain(double value) 
@@ -65,28 +63,30 @@ public class Audio {
 		}
 		targetGain = (float)(Math.log(value)/Math.log(10.0) * 20.0);
 		if(!fading) {
-			Thread t = new Thread();
+			Thread t = new Thread() {
+				public void run()
+				{
+					fading = true;
+					if(currentGain > targetGain) {
+						while(currentGain > targetGain)
+						{
+							currentGain -= fadePerStep;
+							System.out.println(currentGain);
+							gainControl.setValue(currentGain);
+							try	{
+								Thread.sleep(10);
+							}
+							catch(Exception e) {
+								
+							}
+						}
+					}
+				}
+			};
 			t.start();
 		}
 	}
-	public void run()
-	{
-		fading = true;
-		if(currentGain > targetGain) {
-			while(currentGain > targetGain)
-			{
-				currentGain -= fadePerStep;
-				System.out.println(currentGain);
-				gainControl.setValue(currentGain);
-				try	{
-					Thread.sleep(10);
-				}
-				catch(Exception e) {
-					
-				}
-			}
-		}
-	}
+	
 
 	public static Mixer getBestMixer() {
 		//Create a list of mixers to parse through later.
