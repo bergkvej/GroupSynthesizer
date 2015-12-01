@@ -34,7 +34,7 @@ public class Audio {
 	}
 	
 	public static void main(String[] args) {
-		File file = new File("/Users/jesse/Documents/workspace_new/Real Synthesizer/res/pew.wav");
+		File file = new File("/Users/Erik/git/GroupSynthesizer/res/pew.wav");
 		
 		Sound sound = null;
 		try {
