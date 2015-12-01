@@ -163,9 +163,8 @@ public class SynthesizerApplication extends Application
 						{
 							public void run()
 							{
-								playingSound = pianoKey.play(waveform,gain);
+								playingSound = pianoKey.play(waveform, gain);
 								setVisualizer(playingSound);
-								pianoKey.play(waveform, gain);
 							}
 						};
 						playNoteThread = new Thread(r);
