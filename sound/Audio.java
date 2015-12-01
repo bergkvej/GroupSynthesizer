@@ -30,7 +30,7 @@ public class Audio {
 	static boolean fading = false;
 	static float currentGain;
 	static float targetGain = -50.0f;
-	static float fadePerStep = 1f;
+	static float fadePerStep = .05f;
 	static FloatControl gainControl;
 	
 	static {
@@ -49,6 +49,7 @@ public class Audio {
 		gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
 		gainControl.setValue(gain);
 		currentGain = gain;		
+		shiftGain(1.0f);
 		return clip;
 	}
 	public static void shiftGain(double value) 
@@ -60,10 +61,8 @@ public class Audio {
 		else if(value >= 1.0)
 		{
 			value = 1.0;
-		}
-		targetGain = (float)(Math.log(value)/Math.log(10.0) * 20.0);
-		if(!fading) {
-			Thread t = new Thread() {
+		}		
+			new Thread() {
 				public void run()
 				{
 					fading = true;
@@ -82,9 +81,9 @@ public class Audio {
 						}
 					}
 				}
-			};
-			t.start();
-		}
+			}.start();
+		
+		
 	}
 	
 
