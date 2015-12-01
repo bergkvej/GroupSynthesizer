@@ -29,6 +29,11 @@ import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import sound.Sound;
+import wave.FileWave;
+import wave.SawtoothWave;
+import wave.SineWave;
+import wave.SquareWave;
+import wave.TriangleWave;
 
 public class SynthesizerApplication extends Application
 {
@@ -44,6 +49,7 @@ public class SynthesizerApplication extends Application
 	Rectangle[] waveformRectangles = new Rectangle[5];
 	Slider[] waveformFrequencies = new Slider[5];
 	Slider[] waveformAmplitudes = new Slider[5];
+	Sound[] playAllSounds = new Sound[5];
 	Rectangle playAllButton;
 	Text playAllText;
 	int activeWave = 0;
@@ -101,6 +107,15 @@ public class SynthesizerApplication extends Application
 		gainControl.setOrientation(Orientation.VERTICAL);
 		gainControl.valueProperty().addListener(listener -> {
 			gain = (float)gainControl.getValue();
+			if(playAllButton.getFill().equals(Color.DEEPSKYBLUE)) {
+				for(int i = 0; i < 5; i++) {
+					Sound sound = playAllSounds[i];
+					if(sound != null) {
+						float tempGain = (float)(Math.log10(gain * waveformAmplitudes[i].getValue()) * 25.0 + 6);
+						sound.setGain(tempGain);
+					}
+				}
+			}
 		});
 		
 		//default waveform
@@ -162,11 +177,9 @@ public class SynthesizerApplication extends Application
 								if(playAllButton.getFill().equals(Color.DEEPSKYBLUE)) {
 									playAll();
 								}
-								float tempGain = (float)(Math.log10(gain * waveformAmplitudes[activeWave].getValue()) * 20.0);
-								System.out.println(tempGain);
+								float tempGain = (float)(Math.log10(gain * waveformAmplitudes[activeWave].getValue()) * 25.0 + 6);
 								playingSound = pianoKey.play(waveformTypes[activeWave], tempGain);
 								waveformFrequencies[activeWave].setValue(pianoKey.getFrequency().getValue());
-								setVisualizer(playingSound);
 							}
 						};
 						playNoteThread = new Thread(r);
@@ -281,7 +294,15 @@ public class SynthesizerApplication extends Application
 			amplitudeSlider.setLayoutY(text.getLayoutY() + 20);
 			root.getChildren().add(amplitudeSlider);
 			waveformAmplitudes[i] = amplitudeSlider;
-			
+			amplitudeSlider.valueProperty().addListener(event -> {
+				if(playAllButton.getFill().equals(Color.DEEPSKYBLUE)) {
+					Sound sound = playAllSounds[index];
+					if(sound != null) {
+						float tempGain = (float)(Math.log10(gain * waveformAmplitudes[index].getValue()) * 25.0 + 6);
+						sound.setGain(tempGain);
+					}
+				}
+			});
 			Slider frequencySlider = new Slider(65.41,987.8,65.41);
 			frequencySlider.setOrientation(Orientation.VERTICAL);
 			frequencySlider.setLayoutX(x + 20);
@@ -346,7 +367,14 @@ public class SynthesizerApplication extends Application
 							if(visualizerPhaseShift >=1) { 
 								visualizerPhaseShift = 0;
 							}
-							setVisualizer(playingSound);
+							setVisualizer(new Sound[] {playingSound}, new int[]{activeWave});
+						}
+						if(playAllButton.getFill().equals(Color.DEEPSKYBLUE)) {
+							visualizerPhaseShift += .03 * 261.6 / 1000.0;
+							if(visualizerPhaseShift >=1) { 
+								visualizerPhaseShift = 0;
+							}
+							setVisualizer(playAllSounds, new int[]{0,1,2,3,4});
 						}
 					}
 				}
@@ -407,13 +435,58 @@ public class SynthesizerApplication extends Application
 			playAllButton.setFill(Color.DEEPSKYBLUE);
 			for(int i = 0; i < 5; i++) {
 				waveformRectangles[i].setFill(Color.DEEPSKYBLUE);
-				//Sound sound = new 
+				Sound sound = null;
+				switch(waveformTypes[i])
+				{
+					case "Sine":
+					{
+						sound = new SineWave().getPeriod(waveformFrequencies[i].getValue());
+						break;
+					}
+					case "Sawtooth":
+					{
+						sound = new SawtoothWave().getPeriod(waveformFrequencies[i].getValue());
+						break;
+					}
+					case "Square":
+					{
+						sound = new SquareWave().getPeriod(waveformFrequencies[i].getValue());
+						break;
+					}
+					case "Triangle":
+					{
+						sound = new TriangleWave().getPeriod(waveformFrequencies[i].getValue());
+						break;
+					}
+					case "File":
+					{
+						if(fileWave == null) {
+							break;
+						}
+						sound = new FileWave(SynthesizerApplication.fileWave).getPeriod(waveformFrequencies[i].getValue());
+						break;
+					}
+					default:
+					{
+						break;
+					}
+				}
+				playAllSounds[i] = sound;
+				if(sound != null) {
+					float tempGain = (float)(Math.log10(gain * waveformAmplitudes[i].getValue()) * 25.0 + 6);
+					sound.start(tempGain);
+				}
 			}
+			
 		} else {
 			playAllText.setText("Play All");
 			playAllButton.setFill(Color.BLACK);
 			for(int i = 0; i < 5; i++) {
 				waveformRectangles[i].setFill(Color.BLACK);
+				if(playAllSounds[i] != null) {
+					playAllSounds[i].stop();
+				}
+				playAllSounds[i] = null;
 			}
 			waveformRectangles[activeWave].setFill(Color.DEEPSKYBLUE);
 		}
@@ -446,25 +519,32 @@ public class SynthesizerApplication extends Application
 		}
 	}
 	
-	public void setVisualizer(Sound sound) {
-		if(sound != null) {
-			for(int i = 0; i < numVisualizerBars; i++) {
-				Rectangle rectangle = visualizerBars[i];
-				int index = (int)(((double)(i) / (double)(numVisualizerBars) + visualizerPhaseShift) * sound.getData().length) % sound.getData().length;
-				int beginIndex = (index % 2 == 0) ? index : index - 1;
-				int endIndex = beginIndex + 1;
-				if(endIndex < sound.getData().length) {
-					byte value0 = sound.getData()[beginIndex];
-					byte value1 = sound.getData()[endIndex];
-					ByteBuffer bb = ByteBuffer.allocate(2);
-					bb.order(ByteOrder.BIG_ENDIAN);
-					bb.put(value0);
-					bb.put(value1);
-					short value = bb.getShort(0);
-					double length = (0.5 - (double)(value) / (double)(Short.MAX_VALUE) * 0.5) * 0.95;
-					rectangle.setHeight(visualizer.getPrefHeight() * length);
-				}
-			}	
+	public void setVisualizer(Sound[] sounds, int[] indices) {
+		double[] totalLength = new double[numVisualizerBars];
+		for(int s = 0; s < sounds.length; s++) {
+			Sound sound = sounds[s];
+			if(sound != null) {
+				for(int i = 0; i < numVisualizerBars; i++) {
+					int index = (int)(((double)(i) / (double)(numVisualizerBars) + visualizerPhaseShift) * sound.getData().length) % sound.getData().length;
+					int beginIndex = (index % 2 == 0) ? index : index - 1;
+					int endIndex = beginIndex + 1;
+					if(endIndex < sound.getData().length) {
+						byte value0 = sound.getData()[beginIndex];
+						byte value1 = sound.getData()[endIndex];
+						ByteBuffer bb = ByteBuffer.allocate(2);
+						bb.order(ByteOrder.BIG_ENDIAN);
+						bb.put(value0);
+						bb.put(value1);
+						short value = bb.getShort(0);
+						double length = (0.5 - (double)(value) / (double)(Short.MAX_VALUE) * 0.5) * 0.95 * gain * waveformAmplitudes[indices[s]].getValue();
+						totalLength[i] += length;
+					}
+				}	
+			}
+		}
+		for(int i = 0; i < numVisualizerBars; i++) {
+			Rectangle rectangle = visualizerBars[i];
+			rectangle.setHeight(visualizer.getPrefHeight() * totalLength[i]);
 		}
 	}
 }
