@@ -62,7 +62,7 @@ public class PianoKey extends Rectangle
 		this.color = color;
 	}
 	
-	public Sound play(String waveform) 
+	public Sound play(String waveform, float gain) 
 	{  
 		switch(waveform)
 		{
@@ -74,7 +74,6 @@ public class PianoKey extends Rectangle
 			case "Sawtooth":
 			{
 				sound = new SawtoothWave().getPeriod(frequency.getValue());
-	
 				break;
 			}
 			case "Square":
@@ -92,8 +91,9 @@ public class PianoKey extends Rectangle
 				break;
 			}
 		}
-		sound.shiftGain(1.0);
-		sound.start();
+		sound.start(gain);
+//		sound.shiftGain(1.0);
+
 		return sound;
 	}
 	public void stop()

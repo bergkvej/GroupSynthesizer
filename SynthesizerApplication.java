@@ -156,7 +156,7 @@ public class SynthesizerApplication extends Application
 						{
 							public void run()
 							{
-								pianoKey.play(waveform);
+								pianoKey.play(waveform, gain);
 							}
 						};
 						playNoteThread = new Thread(r);

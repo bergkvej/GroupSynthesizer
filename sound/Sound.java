@@ -38,13 +38,13 @@ public class Sound {
 	}
 	
 	//Returns true if audio starts playing, else returns false.
-	public boolean start() {
+	public boolean start(float gain) {
 		if(clip != null) {
 			clip.start();
 			return true;
 		}
 		try {
-			clip = Audio.getClip(this);
+			clip = Audio.getClip(this, gain);
 			return true;
 		} catch (LineUnavailableException e) {
 			e.printStackTrace();
@@ -56,23 +56,21 @@ public class Sound {
 		clip.stop();
 	}
 	
-	public boolean setGain(float gain) {
+	public void setGain(float gain) {
 		
 		System.out.println(clip.getControls().length);
 		for(Control control: clip.getControls()) {
 			System.out.println(control.getType());
 		}
-		
-		
 		if(clip != null && clip.isActive() && clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
 			FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
 			gainControl.setValue(gain);
-			return true;
+			currentGain = gain;
 		}
-		return false;
 	}
 	//Must be a value between 0.0 and 1.0
-		public void shiftGain(double value) {
+		public void shiftGain(double value) 
+		{
 			if(value < 0.0)
 			{
 				value = 0.0;
@@ -94,6 +92,7 @@ public class Sound {
 				while(currentGain > targetGain)
 				{
 					currentGain -= fadePerStep;
+					System.out.println(currentGain);
 					setGain(currentGain);
 					try	{
 						Thread.sleep(10);
