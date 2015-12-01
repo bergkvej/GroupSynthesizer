@@ -266,7 +266,6 @@ public class SynthesizerApplication extends Application
 							if(!splitString[splitString.length - 1].equals("null")) {
 								frequency = Double.valueOf(splitString[splitString.length - 1]);
 							}
-							System.out.println(visualizerPhaseShift);
 							visualizerPhaseShift += .03 * frequency / 1000.0;
 							if(visualizerPhaseShift >=1) { 
 								visualizerPhaseShift = 0;

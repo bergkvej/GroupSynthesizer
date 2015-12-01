@@ -37,35 +37,7 @@ public class Audio {
 		bestMixer = getBestMixer();
 		printMixers();
 	}
-	
-	public static void main(String[] args) {
-		File file = new File("/Users/Erik/git/GroupSynthesizer/res/pew.wav");
-		
-		Sound sound = null;
-		try {
-			sound = getSound(file);
-		} catch (UnsupportedAudioFileException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-		
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		sound.stop();
-	}
-	
+
 	//returns true if gain was set
 	public static boolean setMasterGain(float gain) {
 		if(bestMixer != null && bestMixer.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
