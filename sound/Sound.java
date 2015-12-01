@@ -6,15 +6,23 @@ import javax.sound.sampled.Control;
 import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineUnavailableException;
 
+import wave.Wave;
+
 public class Sound {
 	
 	private final byte[] data;
 	private final AudioFormat format;
+	private final Wave wave;
 	private Clip clip;
 	
-	public Sound(byte[] data, AudioFormat format) {
+	public Sound(byte[] data, AudioFormat format, Wave wave) {
 		this.data = data;
 		this.format = format;
+		this.wave = wave;
+	}
+	
+	public Sound(byte[] data, AudioFormat format) {
+		this(data,format,null);
 	}
 	
 	public byte[] getData() {
@@ -58,5 +66,9 @@ public class Sound {
 			return true;
 		}
 		return false;
+	}
+	
+	public String toString() {
+		return "Length in bytes: " + data.length + "\nAudio Format: " + format.toString() + "\nWave info: " + wave.toString();
 	}
 }

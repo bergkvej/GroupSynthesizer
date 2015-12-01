@@ -11,8 +11,12 @@ public abstract class Wave {
 	//Default audio format will be 44100 Hz, 2 byte sample size (= 1 short), mono, signed, big endian.
 	public static final AudioFormat defaultFormat = new AudioFormat(44100, 16, 1, true, true);
 	
+	protected double frequency;
+	
 	//This assumes 16 bit sample size
 	public Sound getPeriod(double frequency) {
+		this.frequency = frequency;
+		
 		double wavePeriod = 1.0 / frequency;
 		double samplePeriod = 1.0 / 44100.0;
 		
@@ -30,7 +34,7 @@ public abstract class Wave {
 			waveIndex += periodicIncrementer;
 		}
 		
-		return new Sound(buffer.array(), defaultFormat);
+		return new Sound(buffer.array(), defaultFormat, this);
 	}
 	
 	//Wave index is a double that goes from 0 to 1, hitting all parts of the period.
