@@ -4,6 +4,8 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.application.Application;
@@ -27,8 +29,11 @@ import sound.Sound;
 public class SynthesizerApplication extends Application
 {
 	Pane visualizer = new Pane();
-	final int numVisualizerBars = 50;
+	final int numVisualizerBars = 100;
 	Rectangle[] visualizerBars = new Rectangle[numVisualizerBars];
+	Sound playingSound = null;
+	double visualizerPhaseShift = 0;
+	
 	Pane keyboard = new Pane();
 	PianoKey whiteKeys[] = new PianoKey[100];
 	PianoKey blackKeys[] = new PianoKey[100];
@@ -41,6 +46,7 @@ public class SynthesizerApplication extends Application
 	float gain = -12.0f;
 	float pan = 0.0f;
 	int octave = 4;
+		
 	public static void main(String[] args)
 	{
 		launch(args);
@@ -57,6 +63,7 @@ public class SynthesizerApplication extends Application
 		
 		visualizer.setPrefSize(300, 200);
 		visualizer.setStyle("-fx-background-color: black;");
+		visualizer.setScaleY(-1);
 		
 		for(int i = 0; i < numVisualizerBars; i++) {
 			Rectangle rectangle = new Rectangle();
@@ -156,6 +163,8 @@ public class SynthesizerApplication extends Application
 						{
 							public void run()
 							{
+								playingSound = pianoKey.play(waveform,gain);
+								setVisualizer(playingSound);
 								pianoKey.play(waveform, gain);
 							}
 						};
@@ -172,12 +181,14 @@ public class SynthesizerApplication extends Application
 						if(pianoKey.getHeight() == 66.0)
 						{
 							pianoKey.setFill(Color.BLACK);
+							playingSound = null;
 							pianoKey.sound.stop();
 						}
 						else if(pianoKey.getHeight() == 100.0)
 						{
 							pianoKey.setFill(Color.WHITE);
 							pianoKey.sound.stop();
+							playingSound = null;
 						}
 						playNoteThread.interrupt();
 					}
@@ -241,6 +252,32 @@ public class SynthesizerApplication extends Application
 		
 		waveformSelector.setLayoutX(400);
 		waveformSelector.setLayoutY(250);
+
+		
+		boolean running = true;
+		new Thread() {
+			public void run() {
+				long lastTime = System.currentTimeMillis();
+				while(running) {
+					if(System.currentTimeMillis() - lastTime > 20) {
+						lastTime = System.currentTimeMillis();
+						if(playingSound != null) {
+							double frequency = 1;
+							String[] splitString = playingSound.toString().split(" ");
+							if(!splitString[splitString.length - 1].equals("null")) {
+								frequency = Double.valueOf(splitString[splitString.length - 1]);
+							}
+							System.out.println(visualizerPhaseShift);
+							visualizerPhaseShift += .03 * frequency / 1000.0;
+							if(visualizerPhaseShift >=1) { 
+								visualizerPhaseShift = 0;
+							}
+							setVisualizer(playingSound);
+						}
+					}
+				}
+			}
+		}.start();
 	}
 	
 	private void setupKeyboard()
@@ -293,8 +330,18 @@ public class SynthesizerApplication extends Application
 	public void setVisualizer(Sound sound) {
 		for(int i = 0; i < numVisualizerBars; i++) {
 			Rectangle rectangle = visualizerBars[i];
-			short value = sound.getData()[(int)((double)(i) / (double)(numVisualizerBars) * sound.getData().length)];
-			rectangle.setHeight(visualizer.getPrefHeight() * ((double)(value) / (double)(Short.MAX_VALUE)));
+			int index = (int)(((double)(i) / (double)(numVisualizerBars) + visualizerPhaseShift) * sound.getData().length) % sound.getData().length;
+			int beginIndex = (index % 2 == 0) ? index : index - 1;
+			int endIndex = beginIndex + 1;
+			byte value0 = sound.getData()[beginIndex];
+			byte value1 = sound.getData()[endIndex];
+			ByteBuffer bb = ByteBuffer.allocate(2);
+			bb.order(ByteOrder.BIG_ENDIAN);
+			bb.put(value0);
+			bb.put(value1);
+			short value = bb.getShort(0);
+			double length = (0.5 - (double)(value) / (double)(Short.MAX_VALUE) * 0.5) * 0.95;
+			rectangle.setHeight(visualizer.getPrefHeight() * length);
 		}
 	}
 }

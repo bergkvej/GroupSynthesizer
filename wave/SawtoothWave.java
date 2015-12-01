@@ -3,7 +3,7 @@ package wave;
 public class SawtoothWave extends Wave {
 
 	protected short getValue(double waveIndex) {
-		return (short)(Short.MAX_VALUE * (waveIndex - Math.floor(waveIndex)));
+		return (short)(Short.MAX_VALUE * (2 * waveIndex - Math.floor(waveIndex)));
 	}
 	
 	public String toString() {
