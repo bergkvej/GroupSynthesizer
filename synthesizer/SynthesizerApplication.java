@@ -1,3 +1,4 @@
+package synthesizer;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Line;
@@ -31,7 +32,7 @@ import sound.Sound;
 public class SynthesizerApplication extends Application
 {
 	Pane visualizer = new Pane();
-	final int numVisualizerBars = 100;
+	int numVisualizerBars = 125;
 	Rectangle[] visualizerBars = new Rectangle[numVisualizerBars];
 	Sound playingSound = null;
 	double visualizerPhaseShift = 0;
@@ -48,7 +49,6 @@ public class SynthesizerApplication extends Application
 	float release;
 	String waveform = "Sine";
 	float gain = -12.0f;
-	float pan = 0.0f;
 	int octave = 4;
 		
 	public static void main(String[] args)
@@ -69,17 +69,19 @@ public class SynthesizerApplication extends Application
 		visualizer.setStyle("-fx-background-color: black;");
 		visualizer.setScaleY(-1);
 		
-		for(int i = 0; i < numVisualizerBars; i++) {
-			Rectangle rectangle = new Rectangle();
-			rectangle.setWidth(visualizer.getPrefWidth() / (double)(numVisualizerBars));
-			rectangle.setHeight(visualizer.getPrefHeight() / 2.0);
-			rectangle.setFill(i % 2 == 0 ? Color.BLUE : Color.BLUEVIOLET);
-			rectangle.setX(i*(visualizer.getPrefWidth() / numVisualizerBars));
-			rectangle.setY(0);
-			visualizer.getChildren().add(rectangle);
-			visualizerBars[i] = rectangle;
-		}
+		initVisualizer();
 		
+		//Visualizer bar slider
+		Slider visualizerSlider = new Slider(20,200,125);
+		visualizerSlider.setShowTickMarks(true);
+		visualizerSlider.setShowTickLabels(true);
+		visualizerSlider.setMajorTickUnit(30);
+		visualizerSlider.setBlockIncrement(1);
+		visualizerSlider.setOrientation(Orientation.VERTICAL);
+		visualizerSlider.valueProperty().addListener(listener -> {
+			numVisualizerBars = (int)visualizerSlider.getValue();
+			initVisualizer();
+		});
 		
 		//Gain (Volume) Control Slider
 		Slider gainControl = new Slider(-100, 6, 0);
@@ -91,18 +93,6 @@ public class SynthesizerApplication extends Application
 		gainControl.setOrientation(Orientation.VERTICAL);
 		gainControl.valueProperty().addListener(listener -> {
 			gain = (float)gainControl.getValue();
-		});
-		
-		//pan (Pan) Control Slider
-		Slider panControl = new Slider(-1.0f, 1.0f, 0.0f);
-		Text panControlTitle = new Text("Pan Control");
-		panControl.setShowTickMarks(true);
-		panControl.setShowTickLabels(true);
-		panControl.setMajorTickUnit(25);
-		panControl.setBlockIncrement(1.0f);
-		panControl.setOrientation(Orientation.HORIZONTAL);
-		panControl.valueProperty().addListener(listener -> {
-			pan = (float) panControl.getValue();
 		});
 		
 		//default waveform
@@ -206,9 +196,8 @@ public class SynthesizerApplication extends Application
 		root.getChildren().add(keyboard);
 		root.getChildren().add(gainControl);
 		root.getChildren().add(gainControlTitle);
-		root.getChildren().add(panControl);
-		root.getChildren().add(panControlTitle);
 		root.getChildren().add(visualizer);
+		root.getChildren().add(visualizerSlider);
 		root.getChildren().add(waveformSelector);
 		root.getChildren().add(attackSlider);
 		root.getChildren().add(decaySlider);
@@ -219,37 +208,6 @@ public class SynthesizerApplication extends Application
 		root.getChildren().add(s);
 		root.getChildren().add(r);
 		
-		attackSlider.setLayoutX(50);
-		attackSlider.setLayoutY(10);
-		decaySlider.setLayoutX(80);
-		decaySlider.setLayoutY(10);
-		sustainSlider.setLayoutX(110);
-		sustainSlider.setLayoutY(10);
-		releaseSlider.setLayoutX(140);
-		releaseSlider.setLayoutY(10);
-
-		a.setLayoutX(53);
-		a.setLayoutY(10);
-		d.setLayoutX(83);
-		d.setLayoutY(10);
-		s.setLayoutX(113);
-		s.setLayoutY(10);
-		r.setLayoutX(143);
-		r.setLayoutY(10);
-		
-		
-		panControlTitle.setLayoutX(10);
-		panControlTitle.setLayoutY(300);
-		
-		panControl.setLayoutX(40);
-		panControl.setLayoutY(300);
-		
-		gainControlTitle.setLayoutX(280);
-		gainControlTitle.setLayoutY(297);
-		
-		gainControl.setLayoutX(300);
-		gainControl.setLayoutY(300);
-		
 		primaryStage.setScene(new Scene(root, 560, 600));
 		primaryStage.show();
 		primaryStage.setMaxWidth(primaryStage.getWidth()); primaryStage.setMinWidth(primaryStage.getWidth());
@@ -257,6 +215,37 @@ public class SynthesizerApplication extends Application
 		
 		visualizer.setLayoutX(primaryStage.getWidth() - visualizer.getWidth());
 		visualizer.setLayoutY(0);
+		
+		visualizerSlider.setLayoutX(visualizer.getLayoutX() - visualizerSlider.getWidth());
+		visualizerSlider.setLayoutY((visualizer.getPrefHeight() - visualizerSlider.getHeight()) / 2.0);
+
+		double optimalHeight = visualizerSlider.getLayoutY();
+		
+		attackSlider.setLayoutX(80);
+		attackSlider.setLayoutY(optimalHeight);
+		decaySlider.setLayoutX(110);
+		decaySlider.setLayoutY(optimalHeight);
+		sustainSlider.setLayoutX(140);
+		sustainSlider.setLayoutY(optimalHeight);
+		releaseSlider.setLayoutX(170);
+		releaseSlider.setLayoutY(optimalHeight);
+
+		gainControlTitle.setRotate(-90);
+		gainControlTitle.setLayoutX(-30);
+		gainControlTitle.setLayoutY(110);
+		
+		gainControl.setLayoutX(20);
+		gainControl.setLayoutY(optimalHeight);
+		
+		a.setLayoutX(83);
+		a.setLayoutY(optimalHeight);
+		d.setLayoutX(113);
+		d.setLayoutY(optimalHeight);
+		s.setLayoutX(143);
+		s.setLayoutY(optimalHeight);
+		r.setLayoutX(173);
+		r.setLayoutY(optimalHeight);
+		
 		
 		waveformSelector.setLayoutX(400);
 		waveformSelector.setLayoutY(250);
@@ -334,21 +323,38 @@ public class SynthesizerApplication extends Application
 		keyboard.getChildren().add(pianoSeperator);
 	}
 	
+	public void initVisualizer() {
+		visualizer.getChildren().clear();
+		visualizerBars = new Rectangle[numVisualizerBars];
+		for(int i = 0; i < numVisualizerBars; i++) {
+			Rectangle rectangle = new Rectangle();
+			rectangle.setWidth(visualizer.getPrefWidth() / (double)(numVisualizerBars));
+			rectangle.setHeight(visualizer.getPrefHeight() / 2.0);
+			rectangle.setFill(i % 2 == 0 ? Color.BLUE : Color.BLUEVIOLET);
+			rectangle.setX(i*(visualizer.getPrefWidth() / numVisualizerBars));
+			rectangle.setY(0);
+			visualizer.getChildren().add(rectangle);
+			visualizerBars[i] = rectangle;
+		}
+	}
+	
 	public void setVisualizer(Sound sound) {
 		for(int i = 0; i < numVisualizerBars; i++) {
 			Rectangle rectangle = visualizerBars[i];
 			int index = (int)(((double)(i) / (double)(numVisualizerBars) + visualizerPhaseShift) * sound.getData().length) % sound.getData().length;
 			int beginIndex = (index % 2 == 0) ? index : index - 1;
 			int endIndex = beginIndex + 1;
-			byte value0 = sound.getData()[beginIndex];
-			byte value1 = sound.getData()[endIndex];
-			ByteBuffer bb = ByteBuffer.allocate(2);
-			bb.order(ByteOrder.BIG_ENDIAN);
-			bb.put(value0);
-			bb.put(value1);
-			short value = bb.getShort(0);
-			double length = (0.5 - (double)(value) / (double)(Short.MAX_VALUE) * 0.5) * 0.95;
-			rectangle.setHeight(visualizer.getPrefHeight() * length);
+			if(endIndex < sound.getData().length) {
+				byte value0 = sound.getData()[beginIndex];
+				byte value1 = sound.getData()[endIndex];
+				ByteBuffer bb = ByteBuffer.allocate(2);
+				bb.order(ByteOrder.BIG_ENDIAN);
+				bb.put(value0);
+				bb.put(value1);
+				short value = bb.getShort(0);
+				double length = (0.5 - (double)(value) / (double)(Short.MAX_VALUE) * 0.5) * 0.95;
+				rectangle.setHeight(visualizer.getPrefHeight() * length);
+			}
 		}
 	}
 }

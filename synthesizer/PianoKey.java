@@ -1,3 +1,4 @@
+package synthesizer;
 import java.nio.ByteBuffer;
 
 import javax.sound.sampled.AudioFormat;

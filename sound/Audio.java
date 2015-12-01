@@ -49,7 +49,7 @@ public class Audio {
 		gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
 		gainControl.setValue(gain);
 		currentGain = gain;		
-		shiftGain(1.0f);
+		//shiftGain(1.0f);
 		return clip;
 	}
 	public static void shiftGain(double value) 

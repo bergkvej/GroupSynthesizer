@@ -9,6 +9,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 
 import sound.Audio;
 import sound.Sound;
+import synthesizer.NoteFrequencies;
 
 public class FileWave extends Wave {
 	
@@ -27,28 +28,22 @@ public class FileWave extends Wave {
 			e1.printStackTrace();
 		}
 		this.sound = sound;
-		System.out.println("This is working.");
 	}
 
 	public Sound getPeriod(double frequency) {
 		this.frequency = frequency;
 		
-		//double wavePeriod = 1.0 / frequency;
-		double samplePeriod = 1.0 / 44100.0;
-		double wavePeriod = samplePeriod * sound.getData().length;
-		
-		double periodicIncrementer = samplePeriod / wavePeriod;
-		int numSteps = (int)(wavePeriod / samplePeriod);
+		int numSteps = (int)(sound.getData().length / 2.0 * (NoteFrequencies.NoteFreq.C5.getValue() / frequency));
+		double periodicIncrementer = 1.0 / (double)(numSteps);
 		double waveIndex = 0;
 
 		//index goes from 0 -> numSteps as waveIndex goes from 0 -> 1
 		
-		//A short is 2 bytes, so the size of the bytebuffer is numSteps * 2
-		ByteBuffer buffer = ByteBuffer.allocate(numSteps * 2);
+		ByteBuffer buffer = ByteBuffer.allocate(numSteps);
 		
-		for(int index = 0; index < numSteps; index++) {
+		for(int index = 0; index < numSteps / 2; index++) {
 			buffer.putShort(getValue(waveIndex));
-			waveIndex += periodicIncrementer;
+			waveIndex += periodicIncrementer * 2;
 		}
 		
 		return new Sound(buffer.array(), defaultFormat, this);
@@ -64,7 +59,9 @@ public class FileWave extends Wave {
 		bb.order(sound.getFormat().isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
 		bb.put(value0);
 		bb.put(value1);
-		return bb.getShort(0);
+		short value = bb.getShort(0);
+		//System.out.println(waveIndex + " " + beginIndex + " " + value);
+		return value;
 	}
 	
 	public String toString() {
