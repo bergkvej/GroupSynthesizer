@@ -37,16 +37,6 @@ public class Audio {
 		bestMixer = getBestMixer();
 		printMixers();
 	}
-
-	//returns true if gain was set
-	public static boolean setMasterGain(float gain) {
-		if(bestMixer != null && bestMixer.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
-			FloatControl gainControl = (FloatControl) bestMixer.getControl(FloatControl.Type.MASTER_GAIN);
-			gainControl.setValue(gain);
-			return true;
-		}
-		return false;
-	}
 	
 	static Clip getClip(Sound sound, float gain) throws LineUnavailableException {
 		Clip clip = getClip(bestMixer, sound.getFormat());
