@@ -81,7 +81,7 @@ public class SynthesizerApplication extends Application
 		//default waveform
 		
 		//Waveform Selector
-		ObservableList<String> waveforms = FXCollections.observableArrayList("Sine", "Square", "Triangle", "Saw");
+		ObservableList<String> waveforms = FXCollections.observableArrayList("Sine", "Square", "Triangle", "Sawtooth");
 		final ComboBox<String> waveformSelector = new ComboBox<String>(waveforms);
 		waveformSelector.setValue("Sine");
 		waveformSelector.valueProperty().addListener(listener -> {
@@ -142,7 +142,7 @@ public class SynthesizerApplication extends Application
 							{
 								try
 								{
-									pianoKey.play(gain, pan, waveform);
+									pianoKey.play(waveform);
 								}
 								catch(Exception e)
 								{
@@ -151,9 +151,7 @@ public class SynthesizerApplication extends Application
 							}
 						};
 						playNoteThread = new Thread(r);
-						playNoteThread.start();
-								
-						
+						playNoteThread.start();	
 					}
 				});
 		keyboard.setOnMouseReleased(new EventHandler<MouseEvent>()
@@ -165,12 +163,12 @@ public class SynthesizerApplication extends Application
 						if(pianoKey.getHeight() == 66.0)
 						{
 							pianoKey.setFill(Color.BLACK);
-							//pianoKey.line.stop();
+							pianoKey.sound.stop();
 						}
 						else if(pianoKey.getHeight() == 100.0)
 						{
 							pianoKey.setFill(Color.WHITE);
-							//pianoKey.line.stop();
+							pianoKey.sound.stop();
 						}
 						playNoteThread.interrupt();
 					}
