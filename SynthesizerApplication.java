@@ -225,6 +225,8 @@ public class SynthesizerApplication extends Application
 		
 		primaryStage.setScene(new Scene(root, 560, 600));
 		primaryStage.show();
+		primaryStage.setMaxWidth(primaryStage.getWidth()); primaryStage.setMinWidth(primaryStage.getWidth());
+		primaryStage.setMaxHeight(primaryStage.getHeight()); primaryStage.setMinHeight(primaryStage.getHeight());
 		
 		waveformDiagram.setTranslateX(primaryStage.getWidth()-200);
 		
