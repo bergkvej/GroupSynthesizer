@@ -62,22 +62,26 @@ public class Audio {
 		{
 			value = 1.0;
 		}		
+		final double newValue = value;
 			new Thread() {
 				public void run()
 				{
-					fading = true;
-					if(currentGain > targetGain) {
-						while(currentGain > targetGain)
-						{
-							currentGain -= fadePerStep;
-							System.out.println(currentGain);
-							gainControl.setValue(currentGain);
-							try	{
-								Thread.sleep(10);
+					fading = newValue == 0 ? false: true;
+					
+					long initialTime = System.currentTimeMillis();
+					long lastTimePassed = 0;
+					int timeToFade = (int) (5000 * newValue);
+					while(fading) {
+						int timePassed = (int)(System.currentTimeMillis() - initialTime);
+						if(timePassed > lastTimePassed) {
+							float value0 = -70 + 76 * (float)timePassed / (float)timeToFade;
+							//System.out.println(timePassed + " " + value);
+							gainControl.setValue(value0);
+							
+							if(timePassed >= timeToFade) {
+								fading = false;
 							}
-							catch(Exception e) {
-								
-							}
+							lastTimePassed = timePassed;
 						}
 					}
 				}

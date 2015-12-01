@@ -61,7 +61,7 @@ public class FileWave extends Wave {
 		byte value0 = sound.getData()[beginIndex];
 		byte value1 = sound.getData()[endIndex];
 		ByteBuffer bb = ByteBuffer.allocate(2);
-		bb.order(ByteOrder.BIG_ENDIAN);
+		bb.order(sound.getFormat().isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
 		bb.put(value0);
 		bb.put(value1);
 		return bb.getShort(0);

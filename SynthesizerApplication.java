@@ -172,7 +172,7 @@ public class SynthesizerApplication extends Application
 						{
 							public void run()
 							{
-								playingSound = pianoKey.play(waveform, gain);
+								playingSound = pianoKey.play(waveform, attack);
 								setVisualizer(playingSound);
 							}
 						};
