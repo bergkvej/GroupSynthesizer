@@ -62,7 +62,7 @@ public class PianoKey extends Rectangle
 		this.color = color;
 	}
 	
-	public void play(String waveform) 
+	public Sound play(String waveform) 
 	{  
 		switch(waveform)
 		{
@@ -92,7 +92,9 @@ public class PianoKey extends Rectangle
 				break;
 			}
 		}
+		sound.shiftGain(1.0);
 		sound.start();
+		return sound;
 	}
 	public void stop()
 	{
