@@ -1,4 +1,5 @@
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
@@ -21,10 +22,13 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
+import sound.Sound;
 
 public class SynthesizerApplication extends Application
 {
-	Canvas waveformDiagram = new Canvas(200, 150);
+	Pane visualizer = new Pane();
+	final int numVisualizerBars = 50;
+	Rectangle[] visualizerBars = new Rectangle[numVisualizerBars];
 	Pane keyboard = new Pane();
 	PianoKey whiteKeys[] = new PianoKey[100];
 	PianoKey blackKeys[] = new PianoKey[100];
@@ -51,8 +55,20 @@ public class SynthesizerApplication extends Application
 		//default octave
 		octave = 4;
 		
-		GraphicsContext gc = waveformDiagram.getGraphicsContext2D();
-		gc.fillRect(0, 0, waveformDiagram.getWidth(), waveformDiagram.getHeight());
+		visualizer.setPrefSize(300, 200);
+		visualizer.setStyle("-fx-background-color: black;");
+		
+		for(int i = 0; i < numVisualizerBars; i++) {
+			Rectangle rectangle = new Rectangle();
+			rectangle.setWidth(visualizer.getPrefWidth() / (double)(numVisualizerBars));
+			rectangle.setHeight(visualizer.getPrefHeight() / 2.0);
+			rectangle.setFill(i % 2 == 0 ? Color.BLUE : Color.BLUEVIOLET);
+			rectangle.setX(i*(visualizer.getPrefWidth() / numVisualizerBars));
+			rectangle.setY(0);
+			visualizer.getChildren().add(rectangle);
+			visualizerBars[i] = rectangle;
+		}
+		
 		
 		//Gain (Volume) Control Slider
 		Slider gainControl = new Slider(-100, 6, 0);
@@ -140,14 +156,7 @@ public class SynthesizerApplication extends Application
 						{
 							public void run()
 							{
-								try
-								{
-									pianoKey.play(waveform);
-								}
-								catch(Exception e)
-								{
-														
-								}
+								pianoKey.play(waveform);
 							}
 						};
 						playNoteThread = new Thread(r);
@@ -180,7 +189,7 @@ public class SynthesizerApplication extends Application
 		root.getChildren().add(gainControlTitle);
 		root.getChildren().add(panControl);
 		root.getChildren().add(panControlTitle);
-		root.getChildren().add(waveformDiagram);
+		root.getChildren().add(visualizer);
 		root.getChildren().add(waveformSelector);
 		root.getChildren().add(attackSlider);
 		root.getChildren().add(decaySlider);
@@ -190,7 +199,6 @@ public class SynthesizerApplication extends Application
 		root.getChildren().add(d);
 		root.getChildren().add(s);
 		root.getChildren().add(r);
-
 		
 		attackSlider.setLayoutX(50);
 		attackSlider.setLayoutY(10);
@@ -228,10 +236,11 @@ public class SynthesizerApplication extends Application
 		primaryStage.setMaxWidth(primaryStage.getWidth()); primaryStage.setMinWidth(primaryStage.getWidth());
 		primaryStage.setMaxHeight(primaryStage.getHeight()); primaryStage.setMinHeight(primaryStage.getHeight());
 		
-		waveformDiagram.setTranslateX(primaryStage.getWidth()-200);
+		visualizer.setLayoutX(primaryStage.getWidth() - visualizer.getWidth());
+		visualizer.setLayoutY(0);
 		
 		waveformSelector.setLayoutX(400);
-		waveformSelector.setLayoutY(155);
+		waveformSelector.setLayoutY(250);
 	}
 	
 	private void setupKeyboard()
@@ -280,25 +289,8 @@ public class SynthesizerApplication extends Application
 		Rectangle pianoSeperator = new Rectangle(0, 0, keyboard.getWidth(), 1);	
 		keyboard.getChildren().add(pianoSeperator);
 	}
-
-	private void drawVisualizer(String waveform, GraphicsContext gc)
-	{
-		if(waveform.equals("sine"))
-		{
-			
-			
-		}
-		else if(waveform.equals("square"))
-		{
-			
-		}
-		else if(waveform.equals("saw"))
-		{
-			
-		}
-		else
-		{
-			
-		}
+	
+	public void setVisualizer(Sound sound) {
+		
 	}
 }
