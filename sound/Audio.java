@@ -47,13 +47,12 @@ public class Audio {
 			e1.printStackTrace();
 		}
 		
-		sound.start();
+		
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		System.out.println(sound.setGain(-10));
 		try {
 			Thread.sleep(2000);
 		} catch (InterruptedException e) {
@@ -72,7 +71,7 @@ public class Audio {
 		return false;
 	}
 	
-	static Clip getClip(Sound sound) throws LineUnavailableException {
+	static Clip getClip(Sound sound, float gain) throws LineUnavailableException {
 		Clip clip = getClip(bestMixer, sound.getFormat());
 		
 		clip.open(sound.getFormat(), sound.getData(), 0, sound.getData().length);
@@ -80,6 +79,8 @@ public class Audio {
 
 		clip.setLoopPoints(0, -1);
 		clip.loop(Clip.LOOP_CONTINUOUSLY);
+		FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+		gainControl.setValue(gain);
 		
 		return clip;
 	}
