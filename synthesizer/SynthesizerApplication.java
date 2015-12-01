@@ -4,6 +4,7 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -98,7 +99,9 @@ public class SynthesizerApplication extends Application
 		//default waveform
 		
 		//Waveform Selector
-		ObservableList<String> waveforms = FXCollections.observableArrayList("Sine", "Square", "Triangle", "Sawtooth", "File");
+		String[] waveformTypes = {"Sine", "Square", "Triangle", "Sawtooth", "File"};
+
+		ObservableList<String> waveforms = FXCollections.observableArrayList(waveformTypes);
 		final ComboBox<String> waveformSelector = new ComboBox<String>(waveforms);
 		waveformSelector.setValue("Sine");
 		waveformSelector.valueProperty().addListener(listener -> {
@@ -246,10 +249,29 @@ public class SynthesizerApplication extends Application
 		r.setLayoutX(173);
 		r.setLayoutY(optimalHeight);
 		
-		
 		waveformSelector.setLayoutX(400);
 		waveformSelector.setLayoutY(250);
 
+		int[] textXPos = {70, 165, 260, 355, 470};
+		for(int i = 0 ; i < waveformTypes.length; i++) {
+			Text text = new Text(waveformTypes[i]);
+			text.setTextAlignment(TextAlignment.CENTER);
+			text.setLayoutX(textXPos[i]);
+			text.setLayoutY(250);
+			int x = 75 + 100 * i;
+			Slider amplitudeSlider = new Slider(0,1,0);
+			amplitudeSlider.setOrientation(Orientation.VERTICAL);
+			amplitudeSlider.setLayoutX(x - 20);
+			amplitudeSlider.setLayoutY(text.getLayoutY() + 20);
+			root.getChildren().add(amplitudeSlider);
+			Slider frequencySlider = new Slider(0,1,0);
+			frequencySlider.setOrientation(Orientation.VERTICAL);
+			frequencySlider.setLayoutX(x + 20);
+			frequencySlider.setLayoutY(text.getLayoutY() + 20);
+			root.getChildren().add(frequencySlider);
+			Rectangle setFrequency = new Rectangle();
+			root.getChildren().add(text);
+		}	
 		
 		boolean running = true;
 		new Thread() {
@@ -339,22 +361,24 @@ public class SynthesizerApplication extends Application
 	}
 	
 	public void setVisualizer(Sound sound) {
-		for(int i = 0; i < numVisualizerBars; i++) {
-			Rectangle rectangle = visualizerBars[i];
-			int index = (int)(((double)(i) / (double)(numVisualizerBars) + visualizerPhaseShift) * sound.getData().length) % sound.getData().length;
-			int beginIndex = (index % 2 == 0) ? index : index - 1;
-			int endIndex = beginIndex + 1;
-			if(endIndex < sound.getData().length) {
-				byte value0 = sound.getData()[beginIndex];
-				byte value1 = sound.getData()[endIndex];
-				ByteBuffer bb = ByteBuffer.allocate(2);
-				bb.order(ByteOrder.BIG_ENDIAN);
-				bb.put(value0);
-				bb.put(value1);
-				short value = bb.getShort(0);
-				double length = (0.5 - (double)(value) / (double)(Short.MAX_VALUE) * 0.5) * 0.95;
-				rectangle.setHeight(visualizer.getPrefHeight() * length);
-			}
+		if(sound != null) {
+			for(int i = 0; i < numVisualizerBars; i++) {
+				Rectangle rectangle = visualizerBars[i];
+				int index = (int)(((double)(i) / (double)(numVisualizerBars) + visualizerPhaseShift) * sound.getData().length) % sound.getData().length;
+				int beginIndex = (index % 2 == 0) ? index : index - 1;
+				int endIndex = beginIndex + 1;
+				if(endIndex < sound.getData().length) {
+					byte value0 = sound.getData()[beginIndex];
+					byte value1 = sound.getData()[endIndex];
+					ByteBuffer bb = ByteBuffer.allocate(2);
+					bb.order(ByteOrder.BIG_ENDIAN);
+					bb.put(value0);
+					bb.put(value1);
+					short value = bb.getShort(0);
+					double length = (0.5 - (double)(value) / (double)(Short.MAX_VALUE) * 0.5) * 0.95;
+					rectangle.setHeight(visualizer.getPrefHeight() * length);
+				}
+			}	
 		}
 	}
 }
