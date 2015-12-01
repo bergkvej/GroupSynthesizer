@@ -291,6 +291,10 @@ public class SynthesizerApplication extends Application
 	}
 	
 	public void setVisualizer(Sound sound) {
-		
+		for(int i = 0; i < numVisualizerBars; i++) {
+			Rectangle rectangle = visualizerBars[i];
+			short value = sound.getData()[(int)((double)(i) / (double)(numVisualizerBars) * sound.getData().length)];
+			rectangle.setHeight(visualizer.getPrefHeight() * ((double)(value) / (double)(Short.MAX_VALUE)));
+		}
 	}
 }
