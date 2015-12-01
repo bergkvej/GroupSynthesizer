@@ -39,6 +39,14 @@ public class SynthesizerApplication extends Application
 	double visualizerPhaseShift = 0;
 	
 	static File fileWave = null;
+
+	final String[] waveformTypes = {"Sine", "Square", "Triangle", "Sawtooth", "File"};
+	Rectangle[] waveformRectangles = new Rectangle[5];
+	Slider[] waveformFrequencies = new Slider[5];
+	Slider[] waveformAmplitudes = new Slider[5];
+	Rectangle playAllButton;
+	Text playAllText;
+	int activeWave = 0;
 	
 	Pane keyboard = new Pane();
 	PianoKey whiteKeys[] = new PianoKey[100];
@@ -48,8 +56,7 @@ public class SynthesizerApplication extends Application
 	float decay;
 	float sustain;
 	float release;
-	String waveform = "Sine";
-	float gain = -12.0f;
+	float gain = 0.5f;
 	int octave = 4;
 		
 	public static void main(String[] args)
@@ -85,34 +92,19 @@ public class SynthesizerApplication extends Application
 		});
 		
 		//Gain (Volume) Control Slider
-		Slider gainControl = new Slider(-100, 6, 0);
+		Slider gainControl = new Slider(0, 1, 0.5);
 		Text gainControlTitle = new Text("Master Volume");
 		gainControl.setShowTickMarks(true);
 		gainControl.setShowTickLabels(true);
-		gainControl.setMajorTickUnit(3);
-		gainControl.setBlockIncrement(0.25f);
+		gainControl.setMajorTickUnit(0.25);
+		gainControl.setBlockIncrement(0.25);
 		gainControl.setOrientation(Orientation.VERTICAL);
 		gainControl.valueProperty().addListener(listener -> {
 			gain = (float)gainControl.getValue();
 		});
 		
 		//default waveform
-		
-		//Waveform Selector
-		String[] waveformTypes = {"Sine", "Square", "Triangle", "Sawtooth", "File"};
 
-		ObservableList<String> waveforms = FXCollections.observableArrayList(waveformTypes);
-		final ComboBox<String> waveformSelector = new ComboBox<String>(waveforms);
-		waveformSelector.setValue("Sine");
-		waveformSelector.valueProperty().addListener(listener -> {
-			waveform = waveformSelector.getValue().toString();
-			if(waveform.equals("File")) {
-				FileChooser openFileChooser = new FileChooser();
-				openFileChooser.setTitle("Open File");
-				fileWave = openFileChooser.showOpenDialog(primaryStage);
-			}
-		});
-		
 		//ADSR Sliders
 		Slider attackSlider = new Slider(0, 1000, 500);
 		Slider decaySlider = new Slider(0, 1000, 500);
@@ -158,6 +150,8 @@ public class SynthesizerApplication extends Application
 					@Override
 					public void handle(MouseEvent event)
 					{
+						if(!(activeWave == 4 && fileWave == null)) {
+
 						PianoKey pianoKey = (PianoKey) event.getTarget();
 						pianoKey.setFill(Color.DEEPSKYBLUE);
 						
@@ -165,12 +159,19 @@ public class SynthesizerApplication extends Application
 						{
 							public void run()
 							{
-								playingSound = pianoKey.play(waveform, attack);
+								if(playAllButton.getFill().equals(Color.DEEPSKYBLUE)) {
+									playAll();
+								}
+								float tempGain = (float)(Math.log10(gain * waveformAmplitudes[activeWave].getValue()) * 20.0);
+								System.out.println(tempGain);
+								playingSound = pianoKey.play(waveformTypes[activeWave], tempGain);
+								waveformFrequencies[activeWave].setValue(pianoKey.getFrequency().getValue());
 								setVisualizer(playingSound);
 							}
 						};
 						playNoteThread = new Thread(r);
-						playNoteThread.start();	
+						playNoteThread.start();
+						}
 					}
 				});
 		keyboard.setOnMouseReleased(new EventHandler<MouseEvent>()
@@ -178,20 +179,22 @@ public class SynthesizerApplication extends Application
 					@Override
 					public void handle(MouseEvent event)
 					{
-						PianoKey pianoKey = (PianoKey) event.getTarget();
-						if(pianoKey.getHeight() == 66.0)
-						{
-							pianoKey.setFill(Color.BLACK);
-							playingSound = null;
-							pianoKey.sound.stop();
+						if(!(activeWave == 4 && fileWave == null)) {
+							PianoKey pianoKey = (PianoKey) event.getTarget();
+							if(pianoKey.getHeight() == 66.0)
+							{
+								pianoKey.setFill(Color.BLACK);
+								playingSound = null;
+								pianoKey.sound.stop();
+							}
+							else if(pianoKey.getHeight() == 100.0)
+							{
+								pianoKey.setFill(Color.WHITE);
+								pianoKey.sound.stop();
+								playingSound = null;
+							}
+							playNoteThread.interrupt();
 						}
-						else if(pianoKey.getHeight() == 100.0)
-						{
-							pianoKey.setFill(Color.WHITE);
-							pianoKey.sound.stop();
-							playingSound = null;
-						}
-						playNoteThread.interrupt();
 					}
 				});
 		
@@ -201,7 +204,6 @@ public class SynthesizerApplication extends Application
 		root.getChildren().add(gainControlTitle);
 		root.getChildren().add(visualizer);
 		root.getChildren().add(visualizerSlider);
-		root.getChildren().add(waveformSelector);
 		root.getChildren().add(attackSlider);
 		root.getChildren().add(decaySlider);
 		root.getChildren().add(sustainSlider);
@@ -248,30 +250,84 @@ public class SynthesizerApplication extends Application
 		s.setLayoutY(optimalHeight);
 		r.setLayoutX(173);
 		r.setLayoutY(optimalHeight);
-		
-		waveformSelector.setLayoutX(400);
-		waveformSelector.setLayoutY(250);
 
-		int[] textXPos = {70, 165, 260, 355, 470};
+		int[] textXPos = {70, 160, 260, 355, 470};
 		for(int i = 0 ; i < waveformTypes.length; i++) {
+			int x = 75 + 100 * i;
+			final int index = i;
+			Rectangle active = new Rectangle(65,30);
+			active.setLayoutX(x - 25);
+			active.setLayoutY(227);
+			root.getChildren().add(active);
+			active.setOnMousePressed(event -> {
+				setActive(index);
+			});
+			waveformRectangles[i] = active;
+			
 			Text text = new Text(waveformTypes[i]);
 			text.setTextAlignment(TextAlignment.CENTER);
 			text.setLayoutX(textXPos[i]);
 			text.setLayoutY(250);
-			int x = 75 + 100 * i;
-			Slider amplitudeSlider = new Slider(0,1,0);
+			text.setFill(Color.WHITE);
+			root.getChildren().add(text);
+	
+			text.setOnMousePressed(event -> {
+				setActive(index);
+			});
+			
+			Slider amplitudeSlider = new Slider(0,1,1);
 			amplitudeSlider.setOrientation(Orientation.VERTICAL);
 			amplitudeSlider.setLayoutX(x - 20);
 			amplitudeSlider.setLayoutY(text.getLayoutY() + 20);
 			root.getChildren().add(amplitudeSlider);
-			Slider frequencySlider = new Slider(0,1,0);
+			waveformAmplitudes[i] = amplitudeSlider;
+			
+			Slider frequencySlider = new Slider(65.41,987.8,65.41);
 			frequencySlider.setOrientation(Orientation.VERTICAL);
 			frequencySlider.setLayoutX(x + 20);
 			frequencySlider.setLayoutY(text.getLayoutY() + 20);
 			root.getChildren().add(frequencySlider);
-			Rectangle setFrequency = new Rectangle();
-			root.getChildren().add(text);
-		}	
+			waveformFrequencies[i] = frequencySlider;
+		}
+		waveformRectangles[0].setFill(Color.DEEPSKYBLUE);
+		
+		Rectangle playButton = new Rectangle(65,30);
+		playButton.setLayoutX(50);
+		playButton.setLayoutY(440);
+		root.getChildren().add(playButton);
+		playButton.setOnMousePressed(event -> {
+			playAll();
+		});
+		playAllButton = playButton;
+		Text playText = new Text("Play All");
+		playText.setLayoutX(55);
+		playText.setLayoutY(460);
+		playText.setFill(Color.WHITE);
+		root.getChildren().add(playText);
+		playText.setOnMousePressed(event -> {
+			playAll();
+		});
+		playAllText = playText;
+		
+		Rectangle fileButton = new Rectangle(80,30);
+		fileButton.setLayoutX(450);
+		fileButton.setLayoutY(440);
+		root.getChildren().add(fileButton);
+		fileButton.setOnMousePressed(event -> {
+			FileChooser openFileChooser = new FileChooser();
+			openFileChooser.setTitle("Open File");
+			fileWave = openFileChooser.showOpenDialog(primaryStage);
+		});
+		Text fileText = new Text("Choose File");
+		fileText.setLayoutX(455);
+		fileText.setLayoutY(460);
+		fileText.setFill(Color.WHITE);
+		fileText.setOnMousePressed(event -> {
+			FileChooser openFileChooser = new FileChooser();
+			openFileChooser.setTitle("Open File");
+			fileWave = openFileChooser.showOpenDialog(primaryStage);
+		});
+		root.getChildren().add(fileText);
 		
 		boolean running = true;
 		new Thread() {
@@ -343,6 +399,36 @@ public class SynthesizerApplication extends Application
 		
 		Rectangle pianoSeperator = new Rectangle(0, 0, keyboard.getWidth(), 1);	
 		keyboard.getChildren().add(pianoSeperator);
+	}
+	
+	public void playAll() {
+		if(playAllButton.getFill().equals(Color.BLACK)) {
+			playAllText.setText("Pause All");
+			playAllButton.setFill(Color.DEEPSKYBLUE);
+			for(int i = 0; i < 5; i++) {
+				waveformRectangles[i].setFill(Color.DEEPSKYBLUE);
+				//Sound sound = new 
+			}
+		} else {
+			playAllText.setText("Play All");
+			playAllButton.setFill(Color.BLACK);
+			for(int i = 0; i < 5; i++) {
+				waveformRectangles[i].setFill(Color.BLACK);
+			}
+			waveformRectangles[activeWave].setFill(Color.DEEPSKYBLUE);
+		}
+	}
+	
+	public void setActive(int i) {
+		if(playAllButton.getFill().equals(Color.DEEPSKYBLUE)) {
+			playAll();
+		}
+		Rectangle rectangle = waveformRectangles[i];
+		if(i != activeWave) {
+			waveformRectangles[activeWave].setFill(Color.BLACK);
+			rectangle.setFill(Color.DEEPSKYBLUE);
+			activeWave = i;
+		}
 	}
 	
 	public void initVisualizer() {
