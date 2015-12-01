@@ -14,10 +14,7 @@ public class Sound {
 	private final AudioFormat format;
 	private final Wave wave;
 	private Clip clip;
-	boolean fading = false;
-	float currentGain;
-	float targetGain = -50.0f;
-	float fadePerStep = 1f;
+	
 	
 	public Sound(byte[] data, AudioFormat format, Wave wave) {
 		this.data = data;
@@ -65,44 +62,10 @@ public class Sound {
 		if(clip != null && clip.isActive() && clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
 			FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
 			gainControl.setValue(gain);
-			currentGain = gain;
 		}
 	}
 	//Must be a value between 0.0 and 1.0
-		public void shiftGain(double value) 
-		{
-			if(value < 0.0)
-			{
-				value = 0.0;
-			}
-			else if(value >= 1.0)
-			{
-				value = 1.0;
-			}
-			targetGain = (float)(Math.log(value)/Math.log(10.0) * 20.0);
-			if(!fading) {
-				Thread t = new Thread();
-				t.start();
-			}
-		}
-		public void run()
-		{
-			fading = true;
-			if(currentGain > targetGain) {
-				while(currentGain > targetGain)
-				{
-					currentGain -= fadePerStep;
-					System.out.println(currentGain);
-					setGain(currentGain);
-					try	{
-						Thread.sleep(10);
-					}
-					catch(Exception e) {
-						
-					}
-				}
-			}
-		}
+		
 	
 	public String toString() {
 		return "Length in bytes: " + data.length + "\nAudio Format: " + format.toString() + "\nWave info: " + wave.toString();

@@ -27,6 +27,11 @@ import wave.Wave;
 public class Audio {
 	
 	private static Mixer bestMixer;
+	static boolean fading = false;
+	static float currentGain;
+	static float targetGain = -50.0f;
+	static float fadePerStep = 1f;
+	static FloatControl gainControl;
 	
 	static {
 		bestMixer = getBestMixer();
@@ -79,10 +84,46 @@ public class Audio {
 
 		clip.setLoopPoints(0, -1);
 		clip.loop(Clip.LOOP_CONTINUOUSLY);
-		FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+		gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
 		gainControl.setValue(gain);
+		currentGain = gain;
+		shiftGain(1.0);
 		
 		return clip;
+	}
+	public static void shiftGain(double value) 
+	{
+		if(value < 0.0)
+		{
+			value = 0.0;
+		}
+		else if(value >= 1.0)
+		{
+			value = 1.0;
+		}
+		targetGain = (float)(Math.log(value)/Math.log(10.0) * 20.0);
+		if(!fading) {
+			Thread t = new Thread();
+			t.start();
+		}
+	}
+	public void run()
+	{
+		fading = true;
+		if(currentGain > targetGain) {
+			while(currentGain > targetGain)
+			{
+				currentGain -= fadePerStep;
+				System.out.println(currentGain);
+				gainControl.setValue(currentGain);
+				try	{
+					Thread.sleep(10);
+				}
+				catch(Exception e) {
+					
+				}
+			}
+		}
 	}
 
 	public static Mixer getBestMixer() {
